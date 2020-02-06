@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import sys, socket, re
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlencode
 
 class HTTPResponse(object):
     def __init__(self, code=200, body=""):
@@ -24,7 +24,7 @@ class HTTPResponse(object):
 class HTTPClient(object):
     def connect(self, host, port):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.settimeout(0.3)
+        self.socket.settimeout(2)
         self.socket.connect((host, port))
         return self.socket
 
@@ -48,8 +48,7 @@ class HTTPClient(object):
         if not path: path = "/"
 
         body = ""
-        if args: body = "&".join(key+"="+value for key, value in args.items())
-
+        if args: body = urlencode(args, encoding='utf-8')
         header_lines = []
         header_lines.append(request_type.format(path))
         header_lines.append("Host: {}".format(host))
@@ -77,9 +76,9 @@ class HTTPClient(object):
 if __name__ == "__main__":
     client = HTTPClient()
     if (len(sys.argv) <= 1):
-        result = "httpclient.py [GET/POST] [URL]\n"
+        result = HTTPResponse(None,"httpclient.py [GET/POST] [URL]\n")
     elif (len(sys.argv) == 3):
         result = client.command( sys.argv[2], sys.argv[1] )
     else:
         result = client.command( sys.argv[1] )
-    print(result)
+    print(result.body)
